@@ -9,5 +9,15 @@ target_include_directories(itemplatelib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
 )
 
-# Optional: Add specific compile definitions or flags for the library here
-# target_compile_definitions(itemplatelib PRIVATE ITEMPLATELIB_INTERNAL)
+# Define the iprovider shared library
+add_library(iprovider SHARED
+    iprovider.cpp
+)
+
+# Export the functions for the shared library
+target_compile_definitions(iprovider PRIVATE UNMANGLED_LIB_EXPORTS)
+
+# Link iprovider against the same include directories as the main lib
+target_include_directories(iprovider PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+)
