@@ -8,10 +8,10 @@ template libraries for telemetry data
 ├── CMakeLists.txt  
 ├── include/  
 │   └── itemplatelib/  
-│       └── itemplatelib.h  
+│       └── icomputerinfo.h  
 ├── src/  
 │   ├── CMakeLists.txt  
-│   └── itemplatelib.cpp  
+│   └── icomputerinfo.cpp  
 ├── tests/  
 │   ├── CMakeLists.txt  
 │   └── main.cpp  
@@ -19,3 +19,5 @@ template libraries for telemetry data
 │   ├── build_linux_x64.sh    
 │   ├── build_windows_x64.bat    
 │   └── build_android_arm64.sh    
+
+The core functionality is provided in the `icomputerinfo` namespace.

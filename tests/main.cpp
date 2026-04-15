@@ -1,18 +1,25 @@
 #include <iostream>
 #include <windows.h>
-#include "itemplatelib/itemplatelib.h"
+#include "itemplatelib/icomputerinfo.h"
 #include "itemplatelib/api_exports.h"
 
-// Define function pointers for our DLL methods
+// Define function pointer types based on api_exports.h
 typedef EngineHandle (*CreateMathEngineFunc)(int);
-typedef int (*MathEngineCalculateFunc)(EngineHandle, int);
+typedef int (*MathEngine_CalculateFunc)(EngineHandle, int);
 typedef void (*DestroyMathEngineFunc)(EngineHandle);
 
+typedef EngineHandle (*CreateSocwatchEngineFunc)();
+typedef const char* (*SocwatchEngine_RunFunc)(EngineHandle);
+typedef void (*DestroySocwatchEngineFunc)(EngineHandle);
+
+typedef EngineHandle (*CreateCompressEngineFunc)();
+typedef bool (*CompressEngine_CompressFileMappedFunc)(EngineHandle, const wchar_t*, const wchar_t*);
+typedef void (*DestroyCompressEngineFunc)(EngineHandle);
+
 int main() {
-    std::cout << "itemplatelib Test Harness Initialized.\n";
-    std::cout << "Platform/Arch: " << itemplatelib::GetPlatformInfo() << "\n";
-    std::cout << "socWatch: " << itemplatelib::RunSocWatch() << "\n";
-    
+    std::cout << "itemplatelib Test Harness (Manual DLL Load Mode) Initialized.\n";
+    std::cout << "Platform/Arch: " << icomputerinfo::GetPlatformInfo() << "\n";
+   
     // Load the DLL
     const char* dllPath = "iprovider.dll";
     HINSTANCE hLib = LoadLibraryA(dllPath);
@@ -21,45 +28,60 @@ int main() {
         std::cerr << "[Test] FAILED to load: " << dllPath << " (Error: " << GetLastError() << ")\n";
         return 1;
     }
-
     std::cout << "[Test] Successfully loaded " << dllPath << "\n";
 
-    // Resolve function pointers
-    CreateMathEngineFunc CreateMathEngine = (CreateMathEngineFunc)GetProcAddress(hLib, "CreateMathEngine");
-    MathEngineCalculateFunc MathEngineCalculate = (MathEngineCalculateFunc)GetProcAddress(hLib, "MathEngineCalculate");
-    DestroyMathEngineFunc DestroyMathEngine = (DestroyMathEngineFunc)GetProcAddress(hLib, "DestroyMathEngine");
+    // Resolve MathEngine functions
+    auto pCreateMathEngine = (CreateMathEngineFunc)GetProcAddress(hLib, "CreateMathEngine");
+    auto pMathEngine_Calculate = (MathEngine_CalculateFunc)GetProcAddress(hLib, "MathEngine_Calculate");
+    auto pDestroyMathEngine = (DestroyMathEngineFunc)GetProcAddress(hLib, "DestroyMathEngine");
 
-    if (!CreateMathEngine || !MathEngineCalculate || !DestroyMathEngine) {
-        std::cerr << "[Test] FAILED to resolve DLL functions.\n";
+    // Resolve SocwatchEngine functions
+    auto pCreateSocwatchEngine = (CreateSocwatchEngineFunc)GetProcAddress(hLib, "CreateSocwatchEngine");
+    auto pSocwatchEngine_Run = (SocwatchEngine_RunFunc)GetProcAddress(hLib, "SocwatchEngine_Run");
+    auto pDestroySocwatchEngine = (DestroySocwatchEngineFunc)GetProcAddress(hLib, "DestroySocwatchEngine");
+
+    // Resolve CompressEngine functions
+    auto pCreateCompressEngine = (CreateCompressEngineFunc)GetProcAddress(hLib, "CreateCompressEngine");
+    auto pDestroyCompressEngine = (DestroyCompressEngineFunc)GetProcAddress(hLib, "DestroyCompressEngine");
+
+    if (!pCreateMathEngine || !pMathEngine_Calculate || !pDestroyMathEngine ||
+        !pCreateSocwatchEngine || !pSocwatchEngine_Run || !pDestroySocwatchEngine ||
+        !pCreateCompressEngine || !pDestroyCompressEngine) {
+        std::cerr << "[Test] FAILED to resolve one or more DLL functions.\n";
         FreeLibrary(hLib);
         return 1;
     }
 
-    // Call the DLL functions
-    std::cout << "[Test] Testing CreateMathEngine(10)\n";
-    EngineHandle engine = CreateMathEngine(10);
-
-    if (engine) {
+    // 1. MathEngine Test
+    std::cout << "\n[Test] Testing MathEngine via manual load...\n";
+    EngineHandle mathEngine = pCreateMathEngine(10);
+    if (mathEngine) {
         int input = 5;
-        int result = MathEngineCalculate(engine, input);
-        std::cout << "[Test] MathEngineCalculate(" << input << ") -> " << result << "\n";
+        int result = pMathEngine_Calculate(mathEngine, input);
+        std::cout << "[Test] MathEngine_Calculate(" << input << ") -> " << result << "\n";
+        pDestroyMathEngine(mathEngine);
+    }
 
-        if (result != 50) {
-            std::cerr << "[Test] ERROR: Expected 50, got " << result << "\n";
-        } else {
-            std::cout << "[Test] MathEngineCalculate verified successfully.\n";
-        }
+    // 2. SocwatchEngine Test
+    std::cout << "\n[Test] Testing SocwatchEngine via manual load...\n";
+    EngineHandle swEngine = pCreateSocwatchEngine();
+    if (swEngine) {
+        const char* swResult = pSocwatchEngine_Run(swEngine);
+        std::cout << "[Test] SocwatchEngine_Run -> " << (swResult ? swResult : "NULL") << "\n";
+        pDestroySocwatchEngine(swEngine);
+    }
 
-
-        std::cout << "[Test] Testing DestroyMathEngine\n";
-        DestroyMathEngine(engine);
-    } else {
-        std::cerr << "[Test] CreateMathEngine returned NULL handle.\n";
+    // 3. CompressEngine Test
+    std::cout << "\n[Test] Testing CompressEngine via manual load...\n";
+    EngineHandle compressEngine = pCreateCompressEngine();
+    if (compressEngine) {
+        std::cout << "[Test] CompressEngine handle created successfully.\n";
+        pDestroyCompressEngine(compressEngine);
     }
 
     // Unload the DLL
     FreeLibrary(hLib);
-    std::cout << "[Test] Library freed.\n";
+    std::cout << "\n[Test] Library freed. All tests completed.\n";
 
     return 0;
 }

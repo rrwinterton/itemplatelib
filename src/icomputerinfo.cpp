@@ -1,8 +1,8 @@
-#include "itemplatelib/itemplatelib.h"
+#include "icomputerinfo.h"
 #include <windows.h>
 #include <iostream>
 
-namespace itemplatelib
+namespace icomputerinfo
 {
 
     std::string GetPlatformInfo()
@@ -37,4 +37,5 @@ namespace itemplatelib
 
         return info;
     }
-} // namespace itemplatelib
+
+} // namespace icomputerinfo

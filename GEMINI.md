@@ -1,4 +1,4 @@
-# Gemini CLI Project Mandates - itemplatelib
+# Gemini CLI Project Mandates - itemplatelib (icomputerinfo)
 
 This document outlines foundational mandates and architectural patterns for the `itemplatelib` project and its integration with related instrumentation provider projects.
 
@@ -10,7 +10,7 @@ This document outlines foundational mandates and architectural patterns for the 
 - **Build Type:** Default to `Debug` for development and testing unless `Release` is explicitly requested.
 
 ### Project Structure
-- **Headers:** Maintain a standard include directory structure (`include/itemplatelib/*.h`).
+- **Headers:** Maintain a standard include directory structure (`include/itemplatelib/icomputerinfo.h`, `include/itemplatelib/socwatch_engine.h`).
 - **Exports:** For DLL projects like `iprovider`, use the `UNMANGLED_LIB_EXPORTS` macro to ensure C-API compatibility (extern "C").
 - **Organization:** Keep `src`, `include`, `tests`, and `scripts` distinct.
 
