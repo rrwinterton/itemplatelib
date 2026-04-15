@@ -4,6 +4,7 @@
 int main() {
     std::cout << "itemplatelib Test Harness Initialized.\n";
     std::cout << "Platform/Arch: " << itemplatelib::GetPlatformInfo() << "\n";
+    std::cout << "socWatch: " << itemplatelib::RunSocWatch() << "\n";
     
     // Add further initialization and testing logic here
     
