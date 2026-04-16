@@ -96,6 +96,8 @@ int main() {
   if (compressEngine) {
     std::cout << "[Test] CompressEngine handle created successfully.\n";
 
+    
+    //rrw this is hardcoded to compres socwatch test about. both need to change to parameters
     const wchar_t* inputCsv = L"ireport1.csv";
     const wchar_t* outputZip = L"ireport1.zip";
     const char* myArchiveName = "ireport1.csv";
