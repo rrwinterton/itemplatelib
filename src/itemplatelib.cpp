@@ -2,39 +2,42 @@
 #include <windows.h>
 #include <iostream>
 
-namespace itemplatelib
-{
+namespace itemplatelib {
 
-    std::string GetPlatformInfo()
-    {
-        std::string info = "Unknown Platform";
+std::string GetPlatformInfo() {
+  std::string info = "Unknown Platform";
 
 #if defined(_WIN32)
-        info = "Windows";
+  info = "Windows";
 #elif defined(__ANDROID__)
-        info = "Android";
+  info = "Android";
 #elif defined(__linux__)
-        info = "Linux";
+  info = "Linux";
 #endif
 
-        info += " - ";
+  info += " - ";
 
 #if defined(__x86_64__) || defined(_M_X64)
-        info += "x64";
+  info += "x64";
 #elif defined(__aarch64__) || defined(_M_ARM64)
-        info += "ARM64";
+  info += "ARM64";
 #elif defined(__arm__) || defined(_M_ARM)
-        info += "ARM32";
+  info += "ARM32";
 #else
-        info += "Unknown Arch";
+  info += "Unknown Arch";
 #endif
 
-        // Verify Clang compilation
+  // Verify Clang compilation
 #if defined(__clang__)
-        info += " (Built with Clang " + std::to_string(__clang_major__) + "." +
-                std::to_string(__clang_minor__) + ")";
+  info += " (Built with Clang " + std::to_string(__clang_major__) + "." +
+          std::to_string(__clang_minor__) + ")";
 #endif
 
-        return info;
-    }
-} // namespace itemplatelib
+  return info;
+}
+
+std::string RunSocWatch() {
+  // Placeholder implementation for Socwatch execution
+  return "Socwatch output: Execution complete (placeholder).";
+}
+}  // namespace itemplatelib
