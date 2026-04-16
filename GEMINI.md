@@ -22,3 +22,4 @@ This document outlines foundational mandates and architectural patterns for the 
 1. **Reproduction:** Before applying fixes, verify issues using existing or new test cases in the `tests/` directory.
 2. **Build scripts:** Maintain `scripts/build_windows_x64.bat` as the primary entry point for automated builds.
 3. **Integration:** Check sibling directories like `iprovider` for related shared library implementation and configuration.
+4. **Final Testing:** Make sure the iprovider.dll is copied over from the iprovider repository and used instead of the shell dll for testing. This will do a full sweet of tests.
