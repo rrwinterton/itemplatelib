@@ -3,6 +3,12 @@ setlocal
 set "ROOT_DIR=%~dp0.."
 set "BUILD_DIR=%ROOT_DIR%\build\windows_x64"
 
+:: Check for clean argument
+if /I "%~1"=="clean" (
+    echo [Build] Cleaning %BUILD_DIR%...
+    if exist "%BUILD_DIR%" rd /s /q "%BUILD_DIR%"
+)
+
 echo [Build] Configuring and building in %BUILD_DIR%...
 
 :: Run CMake to configure and build
