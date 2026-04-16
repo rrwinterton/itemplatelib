@@ -28,7 +28,7 @@ copy /y "%BUILD_DIR%\src\iprovider.dll" "%BUILD_DIR%\tests\iprovider.dll"
 
 :: Run the test
 echo.
-echo [Test] Running itemplate.exe...
-"%BUILD_DIR%\tests\itemplate.exe"
+echo [Test] Running itemplatelib.exe...
+"%BUILD_DIR%\tests\itemplatelib.exe"
 
 endlocal
