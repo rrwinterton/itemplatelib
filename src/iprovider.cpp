@@ -26,6 +26,37 @@ class SocwatchEngine {
   std::string m_lastResult;
 };
 
+// --- PerfEngine Implementation ---
+class PerfEngine {
+ public:
+  PerfEngine() : m_isRecording(false) {}
+
+  bool StartTrace(const wchar_t* profileName, const wchar_t* profileLevel) {
+    if (m_isRecording)
+      return false;
+
+    std::wcout << L"[iprovider] Starting Perf Trace - Profile: " << profileName
+               << L", Level: " << profileLevel << std::endl;
+    m_isRecording = true;
+    return true;
+  }
+
+  bool StopTrace(const wchar_t* etlFileName) {
+    if (!m_isRecording)
+      return false;
+
+    std::wcout << L"[iprovider] Stopping Perf Trace - Saving to: "
+               << etlFileName << std::endl;
+    m_isRecording = false;
+    return true;
+  }
+
+  bool IsRecording() const { return m_isRecording; }
+
+ private:
+  bool m_isRecording;
+};
+
 // --- CompressEngine Implementation ---
 class CompressEngine {
  public:
@@ -91,5 +122,36 @@ API_EXPORT const char* SocwatchEngine_Run(EngineHandle handle) {
 
 API_EXPORT void DestroySocwatchEngine(EngineHandle handle) {
   delete static_cast<SocwatchEngine*>(handle);
+}
+
+// PerfEngine
+API_EXPORT EngineHandle CreatePerfEngine() {
+  return static_cast<EngineHandle>(new PerfEngine());
+}
+
+API_EXPORT bool PerfEngine_StartTrace(EngineHandle handle,
+                                      const wchar_t* profileName,
+                                      const wchar_t* profileLevel) {
+  if (!handle)
+    return false;
+  return static_cast<PerfEngine*>(handle)->StartTrace(profileName,
+                                                      profileLevel);
+}
+
+API_EXPORT bool PerfEngine_StopTrace(EngineHandle handle,
+                                     const wchar_t* etlFileName) {
+  if (!handle)
+    return false;
+  return static_cast<PerfEngine*>(handle)->StopTrace(etlFileName);
+}
+
+API_EXPORT bool PerfEngine_IsRecording(EngineHandle handle) {
+  if (!handle)
+    return false;
+  return static_cast<PerfEngine*>(handle)->IsRecording();
+}
+
+API_EXPORT void DestroyPerfEngine(EngineHandle handle) {
+  delete static_cast<PerfEngine*>(handle);
 }
 }

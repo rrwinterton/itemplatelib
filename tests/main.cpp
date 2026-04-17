@@ -19,6 +19,12 @@ typedef bool (*CompressEngine_CompressFileMappedFunc)(EngineHandle,
                                                       const char*);
 typedef void (*DestroyCompressEngineFunc)(EngineHandle);
 
+typedef EngineHandle (*CreatePerfEngineFunc)();
+typedef bool (*PerfEngine_StartTraceFunc)(EngineHandle, const wchar_t*, const wchar_t*);
+typedef bool (*PerfEngine_StopTraceFunc)(EngineHandle, const wchar_t*);
+typedef bool (*PerfEngine_IsRecordingFunc)(EngineHandle);
+typedef void (*DestroyPerfEngineFunc)(EngineHandle);
+
 int main() {
   std::cout
       << "itemplatelib Test Harness (Manual DLL Load Mode) Initialized.\n";
@@ -60,10 +66,24 @@ int main() {
   auto pDestroyCompressEngine =
       (DestroyCompressEngineFunc)GetProcAddress(hLib, "DestroyCompressEngine");
 
+  // Resolve PerfEngine functions
+  auto pCreatePerfEngine =
+      (CreatePerfEngineFunc)GetProcAddress(hLib, "CreatePerfEngine");
+  auto pPerfEngine_StartTrace =
+      (PerfEngine_StartTraceFunc)GetProcAddress(hLib, "PerfEngine_StartTrace");
+  auto pPerfEngine_StopTrace =
+      (PerfEngine_StopTraceFunc)GetProcAddress(hLib, "PerfEngine_StopTrace");
+  auto pPerfEngine_IsRecording =
+      (PerfEngine_IsRecordingFunc)GetProcAddress(hLib, "PerfEngine_IsRecording");
+  auto pDestroyPerfEngine =
+      (DestroyPerfEngineFunc)GetProcAddress(hLib, "DestroyPerfEngine");
+
   if (!pCreateMathEngine || !pMathEngine_Calculate || !pDestroyMathEngine ||
       !pCreateSocwatchEngine || !pSocwatchEngine_Run ||
       !pDestroySocwatchEngine || !pCreateCompressEngine ||
-      !pCompressEngine_CompressFileMapped || !pDestroyCompressEngine) {
+      !pCompressEngine_CompressFileMapped || !pDestroyCompressEngine ||
+      !pCreatePerfEngine || !pPerfEngine_StartTrace || !pPerfEngine_StopTrace ||
+      !pPerfEngine_IsRecording || !pDestroyPerfEngine) {
     std::cerr << "[Test] FAILED to resolve one or more DLL functions.\n";
     FreeLibrary(hLib);
     return 1;
@@ -90,7 +110,28 @@ int main() {
     pDestroySocwatchEngine(swEngine);
   }
 
-  // 3. CompressEngine Test
+  // 3. PerfEngine Test
+  std::cout << "\n[Test] Testing PerfEngine via manual load...\n";
+  EngineHandle perfEngine = pCreatePerfEngine();
+  if (perfEngine) {
+    const wchar_t* profile = L"CPU";
+    const wchar_t* level = L"Verbose";
+    const wchar_t* etlFile = L"cpu_profile.etl";
+
+    if (pPerfEngine_StartTrace(perfEngine, profile, level)) {
+      std::cout << "[Test] PerfEngine_StartTrace SUCCESSFUL.\n";
+      if (pPerfEngine_IsRecording(perfEngine)) {
+        std::cout << "[Test] PerfEngine_IsRecording: TRUE\n";
+      }
+      if (pPerfEngine_StopTrace(perfEngine, etlFile)) {
+        std::cout << "[Test] PerfEngine_StopTrace SUCCESSFUL.\n";
+      }
+    } else {
+      std::cerr << "[Test] PerfEngine_StartTrace FAILED.\n";
+    }
+    pDestroyPerfEngine(perfEngine);
+  }
+  // 4. CompressEngine Test
   std::cout << "\n[Test] Testing CompressEngine via manual load...\n";
   EngineHandle compressEngine = pCreateCompressEngine();
   if (compressEngine) {

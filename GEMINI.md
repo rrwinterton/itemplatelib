@@ -9,6 +9,20 @@ This document outlines foundational mandates and architectural patterns for the 
 - **Build System:** Use **CMake** with the **Ninja** generator (`-G Ninja`).
 - **Build Type:** Default to `Debug` for development and testing unless `Release` is explicitly requested.
 
+### Build Instructions
+For building the project using CMake and Ninja:
+
+- **Debug Build:**
+  ```powershell
+  cmake -S . -B build/debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+  cmake --build build/debug
+  ```
+- **Release with Symbols (RelWithDebInfo):**
+  ```powershell
+  cmake -S . -B build/release -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+  cmake --build build/release
+  ```
+
 ### Project Structure
 - **Headers:** Maintain a standard include directory structure (`include/itemplatelib/icomputerinfo.h`, `include/itemplatelib/socwatch_engine.h`).
 - **Exports:** For DLL projects like `iprovider`, use the `UNMANGLED_LIB_EXPORTS` macro to ensure C-API compatibility (extern "C").
