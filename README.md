@@ -26,3 +26,24 @@ template libraries for telemetry data
     └── build_windows_x64.bat    
 
 The core functionality is provided in the `icomputerinfo` namespace.
+
+## CLI Usage
+
+The test harness (`itemplatelib.exe`) supports several engines. Use the activation flag for each engine to enable its specific options.
+
+| Engine | Activation Flag | Required Parameters (if active) | Description |
+| :--- | :--- | :--- | :--- |
+| **Math** | `--math` | `--multiplier` | Runs the test MathEngine with a specified multiplier. |
+| **Perf** | `--perf` | `--perf-start`, `--profile`, `--level`, `--duration`, `--output` | Executes performance tracing. |
+| **SocWatch** | `--socwatch` | `--sw-time`, `--sw-output` | Runs SocWatch data collection for a duration. |
+| **Compress** | `--compress` | `--input`, `--out`, `--name` | Compresses a file into a named archive. |
+
+### Example
+```powershell
+.\build\debug\tests\itemplatelib.exe --math --multiplier 10
+```
+
+## C-API Exports (iprovider.dll)
+
+The `iprovider.dll` exports a C-compatible API for dynamic loading.
+
