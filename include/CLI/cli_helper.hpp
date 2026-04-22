@@ -2,6 +2,7 @@
 #include "CLI.hpp"
 #include "itemplatelib/api_exports.h"
 #include <string>
+#include <vector>
 
 /**
  * @brief Helper function to setup the CLI for the test harness.
@@ -10,7 +11,7 @@ inline void SetupCLI(CLI::App& app,
                     bool& runMath, int& mathMultiplier,
                     bool& runSocwatch, SocwatchEngine_Config& swConfig,
                     bool& runPerf, PerfEngine_Config& perfConfig,
-                    bool& runCompress, std::wstring& compInput, std::wstring& compOutput, std::string& compName) {
+                    bool& runCompress, std::vector<std::wstring>& compInputs, std::string& compOutput, std::vector<std::string>& compNames) {
     
     // 1. MathEngine Parameters
     auto mathGroup = app.add_flag("--math", runMath, "Execute MathEngine");
@@ -33,13 +34,20 @@ inline void SetupCLI(CLI::App& app,
     app.add_option("--output", perfOutputStr, "Output ETL filename")->needs(perfGroup);
 
     // 4. CompressEngine Parameters
-    auto compGroup = app.add_flag("--compress", runCompress, "Execute CompressEngine");
-    app.add_option("--input", compInput, "Input file to compress (wide)")->needs(compGroup);
+    auto compGroup = app.add_option("--compress", compInputs, "Execute CompressEngine and optionally specify input files")
+        ->expected(0, -1)
+        ->delimiter(',')
+        ->each([&runCompress](const std::string&) { runCompress = true; });
+    
+    app.add_option("--input", compInputs, "Input files to compress (wide)")->needs(compGroup)->delimiter(',');
     app.add_option("--out", compOutput, "Output compressed file path (wide)")->needs(compGroup);
-    app.add_option("--name", compName, "Archive name inside the file")->needs(compGroup);
+    app.add_option("--name", compNames, "Archive names inside the file")->needs(compGroup)->delimiter(',');
 
     // Post-parse callback to copy strings into C structs if needed
     app.callback([&]() {
+        if (app.count("--compress") > 0 || !compInputs.empty()) {
+            runCompress = true;
+        }
         if (runSocwatch) {
             swConfig.duration = swTimeStr.empty() ? 0 : std::stoul(swTimeStr);
             strncpy_s(swConfig.outputFileName, sizeof(swConfig.outputFileName), swOutputFileStr.c_str(), _TRUNCATE);

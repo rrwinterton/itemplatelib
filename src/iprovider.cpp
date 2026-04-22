@@ -26,14 +26,18 @@ API_EXPORT bool CompressEngine_ParseConfig(int argc, char** argv, CompressEngine
     return true;
 }
 
+API_EXPORT void CompressEngine_FreeConfig(CompressEngine_Config* config) {}
+
 API_EXPORT EngineHandle CreateCompressEngine() {
     return (EngineHandle)1; // Dummy handle
 }
 
 API_EXPORT bool CompressEngine_CompressFileMapped(EngineHandle handle,
-                                                  const wchar_t* inputFilePath,
+                                                  const wchar_t** inputFilePaths,
+                                                  int inputFileCount,
                                                   const wchar_t* outputFilePath,
-                                                  const char* archiveName) {
+                                                  const char** archiveNames,
+                                                  int archiveNameCount) {
     return true;
 }
 

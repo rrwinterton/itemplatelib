@@ -13,7 +13,7 @@ typedef void (*DestroyMathEngine_t)(EngineHandle);
 
 typedef bool (*CompressEngine_ParseConfig_t)(int, char**, CompressEngine_Config*);
 typedef EngineHandle (*CreateCompressEngine_t)();
-typedef bool (*CompressEngine_CompressFileMapped_t)(EngineHandle, const wchar_t*, const wchar_t*, const char*);
+typedef bool (*CompressEngine_CompressFileMapped_t)(EngineHandle, const wchar_t**, int, const wchar_t*, const char**, int);
 typedef void (*DestroyCompressEngine_t)(EngineHandle);
 
 typedef bool (*SocwatchEngine_ParseConfig_t)(int, char**, SocwatchEngine_Config*);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
   }
 
   CLI::App app{"itemplatelib Test Harness (Dynamic Mode)"};
-
+  
   bool runMath = false;
   int mathMultiplier = 1;
   bool runSocwatch = false;
@@ -105,11 +105,12 @@ int main(int argc, char* argv[]) {
   bool runPerf = false;
   PerfEngine_Config perfConfig{};
   bool runCompress = false;
-  std::wstring compInput, compOutput;
-  std::string compName;
+  std::vector<std::wstring> compInputs;
+  std::string compOutput = "combined_output.zip";
+  std::vector<std::string> compNames;
 
   // Setup CLI using the helper in cli_helper.hpp
-  SetupCLI(app, runMath, mathMultiplier, runSocwatch, swConfig, runPerf, perfConfig, runCompress, compInput, compOutput, compName);
+  SetupCLI(app, runMath, mathMultiplier, runSocwatch, swConfig, runPerf, perfConfig, runCompress, compInputs, compOutput, compNames);
 
   CLI11_PARSE(app, argc, argv);
 
@@ -151,9 +152,7 @@ int main(int argc, char* argv[]) {
 
       if (perfConfig.isStartTrace) {
         if (pPerfEngine_StartTrace(handle, wProfile, wLevel, perfConfig.duration, wEtlFile)) {
-          std::cout << "[Test] PerfEngine_StartTrace SUCCESSFUL. Waiting for " << perfConfig.duration << " seconds...\n";
-          Sleep(perfConfig.duration * 1000);
-          pPerfEngine_StopTrace(handle, wEtlFile);
+          std::cout << "[Test] PerfEngine_StartTrace SUCCESSFUL. Trace saved to: " << perfConfig.etlFileName << "\n";
         } else {
           std::cerr << "[Test] PerfEngine_StartTrace FAILED: " << (pPerfEngine_GetLastResult ? pPerfEngine_GetLastResult(handle) : "Unknown") << "\n";
         }
@@ -170,12 +169,58 @@ int main(int argc, char* argv[]) {
   // 4. CompressEngine
   if (runCompress) {
     std::cout << "\n[Test] Running CompressEngine...\n";
+
     EngineHandle handle = pCreateCompressEngine();
     if (handle) {
-      if (pCompressEngine_CompressFileMapped(handle, compInput.c_str(), compOutput.c_str(), compName.c_str())) {
-        std::cout << "[Test] CompressEngine_CompressFileMapped SUCCESSFUL!\n";
+      std::vector<std::wstring> inputPaths;
+      std::vector<std::string> archiveNames;
+
+      // 1. Explicitly requested inputs via CLI
+      for (size_t i = 0; i < compInputs.size(); ++i) {
+        if (compInputs[i].empty()) continue;
+        inputPaths.push_back(compInputs[i]);
+        std::string internalName = (i < compNames.size()) ? compNames[i] : "input_file_" + std::to_string(i);
+        archiveNames.push_back(internalName);
+        std::wcout << L"[Test] Adding explicit input: " << compInputs[i] << L" as " << std::string(internalName.begin(), internalName.end()).c_str() << L"\n";
+      }
+
+      // 2. Add Socwatch output if it was run
+      if (runSocwatch && swConfig.outputFileName[0] != '\0') {
+        std::string swFullOutput = std::string(swConfig.outputFileName) + ".csv";
+        wchar_t wSwOutput[260];
+        MultiByteToWideChar(CP_ACP, 0, swFullOutput.c_str(), -1, wSwOutput, 260);
+        inputPaths.push_back(std::wstring(wSwOutput));
+        archiveNames.push_back("socwatch_output.csv");
+        std::wcout << L"[Test] Adding Socwatch output: " << wSwOutput << L"\n";
+      }
+
+      // 3. Add Perf output if it was run
+      if (runPerf && perfConfig.etlFileName[0] != '\0') {
+        wchar_t wPerfOutput[260];
+        MultiByteToWideChar(CP_ACP, 0, perfConfig.etlFileName, -1, wPerfOutput, 260);
+        inputPaths.push_back(std::wstring(wPerfOutput));
+        archiveNames.push_back("perf_output.etl");
+        std::wcout << L"[Test] Adding Perf output: " << wPerfOutput << L"\n";
+      }
+
+      if (inputPaths.empty()) {
+        std::cerr << "[Test] No input files specified for CompressEngine.\n";
       } else {
-        std::cerr << "[Test] CompressEngine_CompressFileMapped FAILED.\n";
+        wchar_t wOutput[260];
+        MultiByteToWideChar(CP_ACP, 0, compOutput.c_str(), -1, wOutput, 260);
+
+        std::vector<const wchar_t*> pInputPaths;
+        for (const auto& path : inputPaths) pInputPaths.push_back(path.c_str());
+
+        std::vector<const char*> pArchiveNames;
+        for (const auto& name : archiveNames) pArchiveNames.push_back(name.c_str());
+
+        if (pCompressEngine_CompressFileMapped(handle, pInputPaths.data(), (int)pInputPaths.size(), wOutput, pArchiveNames.data(), (int)pArchiveNames.size())) {
+          std::cout << "[Test] CompressEngine_CompressFileMapped SUCCESSFUL with " << pInputPaths.size() << " files!\n";
+          std::wcout << L"[Test] Output saved to: " << wOutput << L"\n";
+        } else {
+          std::cerr << "[Test] CompressEngine_CompressFileMapped FAILED.\n";
+        }
       }
       pDestroyCompressEngine(handle);
     }
