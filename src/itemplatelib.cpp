@@ -36,8 +36,4 @@ std::string GetPlatformInfo() {
   return info;
 }
 
-std::string RunSocWatch() {
-  // Placeholder implementation for Socwatch execution
-  return "Socwatch output: Execution complete (placeholder).";
-}
 }  // namespace itemplatelib
